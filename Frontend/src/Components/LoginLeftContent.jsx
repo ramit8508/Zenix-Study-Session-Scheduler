@@ -1,5 +1,5 @@
 import React from 'react';
-import Logo from '../../Public/Logo.jpg';
+import { FaClock } from "react-icons/fa6";
 import { FaRegClock } from "react-icons/fa6";
 import { FiTarget } from "react-icons/fi";
 import { IoMdTrendingUp } from "react-icons/io";
@@ -10,8 +10,8 @@ function LoginLeftContent() {
     <div className="login-content">
       {/* Top Branding Section */}
       <div className="logo-container">
-        <img src={Logo} alt="Logo" className="logo-image" />
-        <h1 className="app-name">Zenix</h1>
+      <FaClock className='logo-image' />
+        <h1 className="app-name">ZenSync</h1>
       </div>
 
       {/* Hero Text Section */}

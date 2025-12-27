@@ -1,6 +1,101 @@
 .main-container {
   display: flex;
+  flex-direction: row;
   height: 100vh;
   width: 100vw;
-    background-color: #1A1A1A;
+  background-color: #1A1A1A;
+}
+
+.login-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #212121; 
+  padding: 0 100px;
+  color: #FFFFFF; 
+}
+
+
+form {
+  width: 100%;
+  max-width: 400px; 
+}
+
+.form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #B0B0B0; 
+}
+
+.form-group input {
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid #333;
+  background-color: #2A2A2A; 
+  color: white;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: #4A90E2; 
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #6DB6AE; 
+  color: #1D1A1A;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+  margin-top: 10px;
+}
+
+.login-button:hover {
+  background-color: #6DB6AE;
+}
+
+.login-heading {
+  margin-bottom: 10px;
+  font-size: 24px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.login-para {
+  margin-bottom: 30px;
+  color: #888;
+  font-size: 14px;
+  text-align: center;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.login-signup-button-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+}
+.signup-para {
+  color: #888;
+  font-size: 14px;
+}
+.signup-button {
+  padding: 8px 16px;
+  background-color: #6DB6AE; 
+  color: #1D1A1A;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
 }

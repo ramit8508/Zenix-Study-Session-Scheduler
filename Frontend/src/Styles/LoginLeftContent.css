@@ -1,0 +1,98 @@
+.login-content {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+  margin-left: 150px;
+}
+
+.logo-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 40px;
+  margin-top: 100px;
+}
+
+.logo-image {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+
+}
+
+.app-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2c7680;
+  margin-left: 15px;
+}
+
+.app-heading {
+  font-size: 44px;
+  font-weight: 800;
+  color: #d6e3e3;
+  margin-bottom: 15px;
+  letter-spacing: -1px;
+}
+
+.app-para {
+  font-size: 20px;
+  color: #94a3b8;
+  margin-bottom: 50px;
+  width: 80%;
+  line-height: 1.4;
+}
+
+/* --- THE DOWN PART (Features) --- */
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.features-box {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+}
+.logo-features {
+  background-color: #2c7680;
+  padding: 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 15px rgba(44, 118, 128, 0.2);
+  border: 1px solid rgba(44, 118, 128, 0.3);
+}
+
+.logo-improvement {
+  color: #4FD1C5;
+  width: 24px;
+  height: 24px;
+  filter: drop-shadow(0 0 8px rgba(90, 147, 140, 0.8));
+}
+
+.features-box-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.features-box-heading {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  margin-bottom: 4px;
+}
+
+.features-box-para {
+  font-size: 16px;
+  font-weight: 400;
+  color: #8e9797;
+  margin: 0;
+  text-align: left;
+}

@@ -28,7 +28,7 @@ function Signup() {
               <label htmlFor="password">Password:</label>
               <input type="password" id="password" name="password" required />
             </div>
-            <button type="submit" className="login-button">
+            <button type="submit" className="login-button" onClick={() => navigate('/dashboard')}>
               Login
             </button>
           </form>

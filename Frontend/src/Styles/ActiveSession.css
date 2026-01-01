@@ -1,0 +1,157 @@
+.active-session-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background-color: #1a1a1a;
+  min-height: 100vh;
+  animation: fadeInScale 0.4s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.session-badge {
+  background-color: rgba(109, 182, 174, 0.2);
+  color: #6DB6AE;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 30px;
+  border: 1px solid rgba(109, 182, 174, 0.3);
+}
+
+.session-subject {
+  font-size: 48px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 10px 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.session-type {
+  font-size: 20px;
+  color: #888;
+  margin: 0 0 60px 0;
+}
+
+.timer-circle {
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2d4a4a 0%, #1a3030 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 3px solid rgba(109, 182, 174, 0.3);
+  animation: timerPulse 2s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+
+.timer-circle:hover {
+  transform: scale(1.02);
+  box-shadow: 0 25px 70px rgba(109, 182, 174, 0.2);
+}
+
+@keyframes timerPulse {
+  0%, 100% {
+    border-color: rgba(109, 182, 174, 0.3);
+  }
+  50% {
+    border-color: rgba(109, 182, 174, 0.6);
+  }
+}
+
+.timer-display {
+  font-size: 64px;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: 'Inter', monospace;
+  letter-spacing: 4px;
+}
+
+.goal-duration {
+  font-size: 16px;
+  color: #888;
+  margin-bottom: 40px;
+}
+
+.session-controls {
+  display: flex;
+  gap: 20px;
+}
+
+.btn-pause,
+.btn-end {
+  padding: 14px 32px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Inter', sans-serif;
+}
+
+.btn-pause {
+  background-color: transparent;
+  color: #fff;
+  border: 2px solid #3a3a3a;
+}
+
+.btn-pause:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: #6DB6AE;
+}
+
+.btn-end {
+  background-color: #dc2626;
+  color: #ffffff;
+}
+
+.btn-end:hover {
+  background-color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .timer-circle {
+    width: 250px;
+    height: 250px;
+  }
+
+  .timer-display {
+    font-size: 48px;
+  }
+
+  .session-subject {
+    font-size: 36px;
+  }
+
+  .session-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-pause,
+  .btn-end {
+    width: 100%;
+    justify-content: center;
+  }
+}

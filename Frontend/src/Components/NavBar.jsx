@@ -1,8 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutGrid, Timer, TrendingUp, Settings, Clock } from 'lucide-react';
 import '../Styles/NavBar.css';
 
 function NavBar() {
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Get user data from localStorage
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  // Get first letter of name for avatar
+  const getInitial = (name) => {
+    return name ? name.charAt(0).toUpperCase() : 'U';
+  };
+
+  const isActive = (path) => location.pathname === path;
+
   return (
     <div className="navbar-container">
       <nav className="navbar">
@@ -16,19 +36,31 @@ function NavBar() {
 
         {/* Navigation Links */}
         <ul className="navbar-links">
-          <li className="nav-item active">
+          <li 
+            className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}
+            onClick={() => navigate('/dashboard')}
+          >
             <LayoutGrid size={20} />
             <span>Dashboard</span>
           </li>
-          <li className="nav-item">
+          <li 
+            className={`nav-item ${isActive('/sessions') ? 'active' : ''}`}
+            onClick={() => navigate('/sessions')}
+          >
             <Timer size={20} />
             <span>Sessions</span>
           </li>
-          <li className="nav-item">
+          <li 
+            className={`nav-item ${isActive('/analytics') ? 'active' : ''}`}
+            onClick={() => navigate('/analytics')}
+          >
             <TrendingUp size={20} />
             <span>Analytics</span>
           </li>
-          <li className="nav-item">
+          <li 
+            className={`nav-item ${isActive('/settings') ? 'active' : ''}`}
+            onClick={() => navigate('/settings')}
+          >
             <Settings size={20} />
             <span>Settings</span>
           </li>
@@ -36,10 +68,10 @@ function NavBar() {
 
         {/* Bottom User Section */}
         <div className="user-profile">
-          <div className="avatar">R</div>
+          <div className="avatar">{user ? getInitial(user.name) : 'U'}</div>
           <div className="user-info">
-            <p className="user-name">Ramit Goyal</p>
-            <p className="user-email">24BAI70506@cuchd.in</p>
+            <p className="user-name">{user?.name || 'Guest User'}</p>
+            <p className="user-email">{user?.email || 'guest@example.com'}</p>
           </div>
         </div>
       </nav>

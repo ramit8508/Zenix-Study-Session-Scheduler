@@ -1,0 +1,262 @@
+.sessions-page-container {
+  flex: 1;
+  padding: 40px;
+  background-color: #1a1a1a;
+  min-height: 100vh;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sessions-heading {
+  color: #ffffff;
+  font-size: 32px;
+  margin: 0 0 8px 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.sessions-subheading {
+  color: #888;
+  font-size: 16px;
+  margin: 0 0 30px 0;
+}
+
+.sessions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  gap: 20px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #212121;
+  padding: 12px 20px;
+  border-radius: 10px;
+  flex: 1;
+  max-width: 400px;
+  border: 1px solid #2a2a2a;
+}
+
+.search-box svg {
+  color: #666;
+}
+
+.search-box input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 15px;
+  flex: 1;
+  font-family: 'Inter', sans-serif;
+}
+
+.search-box input::placeholder {
+  color: #666;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-btn {
+  padding: 10px 20px;
+  background-color: #212121;
+  color: #888;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.filter-btn.active {
+  background-color: #6DB6AE;
+  color: #1a1a1a;
+  border-color: #6DB6AE;
+}
+
+.filter-btn:hover:not(.active) {
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
+.sessions-list {
+  max-width: 900px;
+}
+
+.session-date-group {
+  margin-bottom: 30px;
+}
+
+.date-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #888;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.date-header svg {
+  color: #666;
+}
+
+.session-item {
+  background-color: #212121;
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #2a2a2a;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideInRight 0.3s ease-out;
+  animation-fill-mode: both;
+}
+
+.session-item:nth-child(1) { animation-delay: 0.05s; }
+.session-item:nth-child(2) { animation-delay: 0.1s; }
+.session-item:nth-child(3) { animation-delay: 0.15s; }
+.session-item:nth-child(4) { animation-delay: 0.2s; }
+.session-item:nth-child(5) { animation-delay: 0.25s; }
+
+.session-item:hover {
+  background-color: #252525;
+  border-color: #6DB6AE;
+  transform: translateX(5px);
+  box-shadow: 0 4px 15px rgba(109, 182, 174, 0.15);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.session-icon {
+  width: 44px;
+  height: 44px;
+  background-color: #2a4a4a;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.session-icon svg {
+  color: #6DB6AE;
+}
+
+.session-details {
+  flex: 1;
+}
+
+.session-subject-name {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.session-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #888;
+  font-size: 14px;
+}
+
+.session-meta svg {
+  color: #666;
+}
+
+.session-type-badge {
+  background-color: rgba(109, 182, 174, 0.15);
+  color: #6DB6AE;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.delete-btn {
+  background-color: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.no-sessions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.no-sessions svg {
+  margin-bottom: 16px;
+}
+
+.no-sessions p {
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .sessions-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    max-width: 100%;
+  }
+
+  .filter-buttons {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .session-item {
+    padding: 16px;
+  }
+
+  .session-meta {
+    flex-wrap: wrap;
+  }
+}

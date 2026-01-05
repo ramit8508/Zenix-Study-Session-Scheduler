@@ -1,7 +1,7 @@
 import { asyncHandler } from "../Utils/asyncHandler.js";
 import { ApiError } from "../Utils/ApiError.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
-import { User } from "../Models/user.model.js";
+import { User } from "../Models/user.model.sqlite.js";
 
 // Generate access token
 const generateAccessToken = async (userId) => {
@@ -41,10 +41,10 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   // Generate token
-  const accessToken = await generateAccessToken(user._id);
+  const accessToken = await generateAccessToken(user.id);
 
   // Get created user without password
-  const createdUser = await User.findById(user._id).select("-password");
+  const createdUser = await User.findByIdWithoutPassword(user.id);
 
   if (!createdUser) {
     throw new ApiError(500, "Something went wrong while registering the user");
@@ -97,10 +97,10 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   // Generate token
-  const accessToken = await generateAccessToken(user._id);
+  const accessToken = await generateAccessToken(user.id);
 
   // Get user without password
-  const loggedInUser = await User.findById(user._id).select("-password");
+  const loggedInUser = await User.findByIdWithoutPassword(user.id);
 
   // Set cookie options
   const options = {

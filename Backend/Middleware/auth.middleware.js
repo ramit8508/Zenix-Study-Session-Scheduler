@@ -1,7 +1,7 @@
 import { ApiError } from "../Utils/ApiError.js";
 import { asyncHandler } from "../Utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
-import { User } from "../Models/user.model.js";
+import { User } from "../Models/user.model.sqlite.js";
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
@@ -13,9 +13,12 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
       throw new ApiError(401, "Unauthorized request");
     }
 
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    const decodedToken = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "your-secret-key-change-this"
+    );
 
-    const user = await User.findById(decodedToken?._id).select("-password");
+    const user = await User.findByIdWithoutPassword(decodedToken?.id);
 
     if (!user) {
       throw new ApiError(401, "Invalid access token");

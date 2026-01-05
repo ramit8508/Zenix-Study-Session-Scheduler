@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import NavBar from '../Components/NavBar';
 import { Search, Trash2, Clock, Calendar } from 'lucide-react';
+import { sessionsAPI } from '../api/sessions';
 import '../Styles/Sessions.css';
 
 function Sessions() {
@@ -9,9 +10,27 @@ function Sessions() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    const storedSessions = JSON.parse(localStorage.getItem('sessions') || '[]');
-    setSessions(storedSessions.reverse());
+    loadSessions();
   }, []);
+
+  const loadSessions = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const response = await sessionsAPI.getAll(user?.id || 1);
+      
+      if (response.success) {
+        setSessions(response.data.reverse());
+      } else {
+        // Fallback to localStorage
+        const storedSessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+        setSessions(storedSessions.reverse());
+      }
+    } catch (error) {
+      console.error('Error loading sessions:', error);
+      const storedSessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+      setSessions(storedSessions.reverse());
+    }
+  };
 
   const formatTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
@@ -62,10 +81,24 @@ function Sessions() {
 
   const groupedSessions = groupSessionsByDate(filteredSessions);
 
-  const deleteSession = (id) => {
-    const updatedSessions = sessions.filter(s => s.id !== id);
-    setSessions(updatedSessions);
-    localStorage.setItem('sessions', JSON.stringify(updatedSessions));
+  const deleteSession = async (id) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      await sessionsAPI.delete(id, user?.id || 1);
+      
+      // Update local state
+      const updatedSessions = sessions.filter(s => s.id !== id);
+      setSessions(updatedSessions);
+      
+      // Update localStorage
+      localStorage.setItem('sessions', JSON.stringify(updatedSessions));
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      // Fallback - just update localStorage
+      const updatedSessions = sessions.filter(s => s.id !== id);
+      setSessions(updatedSessions);
+      localStorage.setItem('sessions', JSON.stringify(updatedSessions));
+    }
   };
 
   return (

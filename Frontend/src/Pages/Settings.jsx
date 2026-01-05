@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Bell, Database, Download, Upload, Trash2, LogOut } from 'lucide-react';
+import { User, Bell, Database, Download, Upload, Trash2, LogOut, Edit, Save, X } from 'lucide-react';
 import NavBar from '../Components/NavBar';
+import { userAPI } from '../api/user';
 import '../Styles/Settings.css';
 
 function Settings() {
@@ -9,12 +10,27 @@ function Settings() {
   const [user, setUser] = useState(null);
   const [notifications, setNotifications] = useState(true);
   const [autoSave, setAutoSave] = useState(true);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [editError, setEditError] = useState('');
 
   useEffect(() => {
     // Load user data
     const userData = localStorage.getItem('user');
     if (userData) {
-      setUser(JSON.parse(userData));
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+      setEditForm({
+        name: parsedUser.name || '',
+        email: parsedUser.email || '',
+        password: '',
+        confirmPassword: ''
+      });
     }
 
     // Load preferences
@@ -24,6 +40,72 @@ function Settings() {
     if (notifPref !== null) setNotifications(JSON.parse(notifPref));
     if (autoSavePref !== null) setAutoSave(JSON.parse(autoSavePref));
   }, []);
+
+  const handleEditChange = (e) => {
+    setEditForm({
+      ...editForm,
+      [e.target.name]: e.target.value
+    });
+    setEditError('');
+  };
+
+  const handleSaveProfile = async () => {
+    // Validation
+    if (!editForm.name || !editForm.email) {
+      setEditError('Name and email are required');
+      return;
+    }
+
+    if (editForm.password && editForm.password !== editForm.confirmPassword) {
+      setEditError('Passwords do not match');
+      return;
+    }
+
+    if (editForm.password && editForm.password.length < 6) {
+      setEditError('Password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      const updateData = {
+        name: editForm.name,
+        email: editForm.email,
+      };
+
+      if (editForm.password) {
+        updateData.password = editForm.password;
+      }
+
+      const response = await userAPI.update(user.id, updateData);
+      
+      if (response.success) {
+        setUser(response.data);
+        setIsEditingProfile(false);
+        setEditForm({
+          ...editForm,
+          password: '',
+          confirmPassword: ''
+        });
+        alert('Profile updated successfully!');
+      } else {
+        setEditError(response.message || 'Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setEditError('Failed to update profile. Please try again.');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingProfile(false);
+    setEditForm({
+      name: user?.name || '',
+      email: user?.email || '',
+      password: '',
+      confirmPassword: ''
+    });
+    setEditError('');
+  };
 
   const handleNotificationToggle = () => {
     const newValue = !notifications;
@@ -133,24 +215,98 @@ function Settings() {
           <div className="section-header">
             <User size={20} />
             <h2>Profile</h2>
+            {!isEditingProfile && (
+              <button 
+                className="edit-profile-btn"
+                onClick={() => setIsEditingProfile(true)}
+              >
+                <Edit size={16} />
+                Edit
+              </button>
+            )}
           </div>
           <p className="section-description">Your account information</p>
           
-          <div className="profile-info-grid">
-            <div className="info-item">
-              <label>Name</label>
-              <p className="info-value">{user?.name || 'Guest User'}</p>
-            </div>
-            <div className="info-item">
-              <label>Email</label>
-              <p className="info-value">{user?.email || 'guest@example.com'}</p>
-            </div>
-          </div>
+          {!isEditingProfile ? (
+            <>
+              <div className="profile-info-grid">
+                <div className="info-item">
+                  <label>Name</label>
+                  <p className="info-value">{user?.name || 'Guest User'}</p>
+                </div>
+                <div className="info-item">
+                  <label>Email</label>
+                  <p className="info-value">{user?.email || 'guest@example.com'}</p>
+                </div>
+              </div>
 
-          <div className="info-item full-width">
-            <label>Member since</label>
-            <p className="info-value">{user?.createdAt ? formatDate(user.createdAt) : 'Unknown'}</p>
-          </div>
+              <div className="info-item full-width">
+                <label>Member since</label>
+                <p className="info-value">{user?.created_at ? formatDate(user.created_at) : 'Unknown'}</p>
+              </div>
+            </>
+          ) : (
+            <div className="edit-profile-form">
+              {editError && (
+                <div className="error-message">{editError}</div>
+              )}
+              
+              <div className="form-group">
+                <label>Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={editForm.name}
+                  onChange={handleEditChange}
+                  placeholder="Enter your name"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={editForm.email}
+                  onChange={handleEditChange}
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>New Password (optional)</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={editForm.password}
+                  onChange={handleEditChange}
+                  placeholder="Leave blank to keep current"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Confirm Password</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={editForm.confirmPassword}
+                  onChange={handleEditChange}
+                  placeholder="Confirm new password"
+                />
+              </div>
+
+              <div className="edit-actions">
+                <button className="action-btn primary" onClick={handleSaveProfile}>
+                  <Save size={16} />
+                  Save Changes
+                </button>
+                <button className="action-btn secondary" onClick={handleCancelEdit}>
+                  <X size={16} />
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Preferences Section */}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import NavBar from '../Components/NavBar';
 import { Pause, Play, Square } from 'lucide-react';
+import { sessionsAPI } from '../api/sessions';
 import '../Styles/ActiveSession.css';
 
 function ActiveSession() {
@@ -92,32 +93,49 @@ function ActiveSession() {
     return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const handleEndSession = () => {
+  const handleEndSession = async () => {
     const activeSession = JSON.parse(localStorage.getItem('activeSession'));
+    const user = JSON.parse(localStorage.getItem('user'));
     
-    // Save session to sessions history
-    const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+    // Prepare session data
     const newSession = {
-      id: Date.now(),
+      user_id: user?.id || 1,
       subject: activeSession.subject,
       type: activeSession.sessionType,
       duration: elapsedTime,
-      goalDuration: activeSession.duration ? parseInt(activeSession.duration) * 60 : null,
       date: new Date().toISOString().split('T')[0],
+      notes: '',
     };
-    sessions.push(newSession);
-    localStorage.setItem('sessions', JSON.stringify(sessions));
 
-    // Update today's study time
-    const today = new Date().toDateString();
-    const todayTime = JSON.parse(localStorage.getItem('todayStudyTime') || '{}');
-    todayTime[today] = (todayTime[today] || 0) + elapsedTime;
-    localStorage.setItem('todayStudyTime', JSON.stringify(todayTime));
+    try {
+      // Save session to backend/database
+      await sessionsAPI.create(newSession);
+      
+      // Also save to localStorage as fallback
+      const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+      sessions.push({
+        ...newSession,
+        id: Date.now(),
+        goalDuration: activeSession.duration ? parseInt(activeSession.duration) * 60 : null,
+      });
+      localStorage.setItem('sessions', JSON.stringify(sessions));
 
-    // Clear active session
-    localStorage.removeItem('activeSession');
+      // Update today's study time
+      const today = new Date().toDateString();
+      const todayTime = JSON.parse(localStorage.getItem('todayStudyTime') || '{}');
+      todayTime[today] = (todayTime[today] || 0) + elapsedTime;
+      localStorage.setItem('todayStudyTime', JSON.stringify(todayTime));
 
-    navigate('/dashboard');
+      // Clear active session
+      localStorage.removeItem('activeSession');
+
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error saving session:', error);
+      // Still navigate away even if save fails
+      localStorage.removeItem('activeSession');
+      navigate('/dashboard');
+    }
   };
 
   // Get session data from active session or location state

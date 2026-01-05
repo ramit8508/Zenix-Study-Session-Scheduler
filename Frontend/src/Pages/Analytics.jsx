@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, TrendingUp, Target, Award } from 'lucide-react';
 import NavBar from '../Components/NavBar';
+import { sessionsAPI } from '../api/sessions';
 import '../Styles/Analytics.css';
 
 function Analytics() {
@@ -14,6 +15,7 @@ function Analytics() {
   });
   const [weeklyData, setWeeklyData] = useState([]);
   const [monthlyData, setMonthlyData] = useState([]);
+  const [subjectBreakdown, setSubjectBreakdown] = useState([]);
 
   useEffect(() => {
     // Migrate old sessions to new date format
@@ -54,16 +56,92 @@ function Analytics() {
     }
   };
 
-  const loadAnalyticsData = () => {
-    // Load sessions from localStorage
-    const storedSessions = JSON.parse(localStorage.getItem('sessions') || '[]');
-    console.log('Analytics - Loaded sessions:', storedSessions);
-    setSessions(storedSessions);
+  const loadAnalyticsData = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      
+      // Always load localStorage sessions as primary source
+      const storedSessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+      console.log('Analytics - Loaded sessions from localStorage:', storedSessions);
+      
+      if (storedSessions.length > 0) {
+        // Use localStorage data
+        setSessions(storedSessions);
+        calculateStats(storedSessions);
+        generateWeeklyData(storedSessions);
+        generateMonthlyData(storedSessions);
+        calculateSubjectBreakdown(storedSessions);
+      } else {
+        // Try to get from backend if localStorage is empty
+        const response = await sessionsAPI.getAnalytics(user?.id || 1);
+        
+        if (response.success && response.data.totalSessions > 0) {
+          const analytics = response.data;
+          
+          // Set stats
+          setStats({
+            totalTime: Math.floor(analytics.totalTime / 60), // Convert to minutes
+            avgSession: Math.floor(analytics.avgSession / 60),
+            totalSessions: analytics.totalSessions,
+            longestStreak: calculateStreakFromData(analytics.weeklyData)
+          });
 
-    // Calculate stats
-    calculateStats(storedSessions);
-    generateWeeklyData(storedSessions);
-    generateMonthlyData(storedSessions);
+          // Load sessions for detailed view
+          const sessionsResponse = await sessionsAPI.getAll(user?.id || 1);
+          if (sessionsResponse.success) {
+            setSessions(sessionsResponse.data);
+            calculateStats(sessionsResponse.data);
+            generateWeeklyData(sessionsResponse.data);
+            generateMonthlyData(sessionsResponse.data);
+          }
+
+          // Set subject breakdown
+          setSubjectBreakdown(analytics.subjectBreakdown || []);
+        } else {
+          // No data in either place
+          setStats({
+            totalTime: 0,
+            avgSession: 0,
+            totalSessions: 0,
+            longestStreak: 0
+          });
+          setWeeklyData([]);
+          setMonthlyData([]);
+          setSubjectBreakdown([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+      // Fallback to localStorage
+      const storedSessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+      console.log('Analytics - Fallback to localStorage:', storedSessions);
+      setSessions(storedSessions);
+      calculateStats(storedSessions);
+      generateWeeklyData(storedSessions);
+      generateMonthlyData(storedSessions);
+      calculateSubjectBreakdown(storedSessions);
+    }
+  };
+
+  const calculateSubjectBreakdown = (sessions) => {
+    const breakdown = {};
+    
+    sessions.forEach(session => {
+      const subject = session.subject || 'Unknown';
+      if (!breakdown[subject]) {
+        breakdown[subject] = {
+          subject: subject,
+          totalDuration: 0,
+          sessionCount: 0
+        };
+      }
+      breakdown[subject].totalDuration += session.duration || 0;
+      breakdown[subject].sessionCount += 1;
+    });
+
+    const breakdownArray = Object.values(breakdown).sort((a, b) => b.totalDuration - a.totalDuration);
+    console.log('Subject breakdown:', breakdownArray);
+    setSubjectBreakdown(breakdownArray);
   };
 
   const calculateStats = (sessions) => {
@@ -111,23 +189,27 @@ function Analytics() {
       date.setDate(today.getDate() - today.getDay() + index);
       const dateStr = date.toISOString().split('T')[0];
       
-      const daySessions = sessions.filter(s => s.date === dateStr);
+      const daySessions = sessions.filter(s => {
+        // Handle both old format (with time) and new format (date only)
+        const sessionDate = s.date.split('T')[0];
+        return sessionDate === dateStr;
+      });
       const totalSeconds = daySessions.reduce((sum, s) => sum + s.duration, 0);
       const totalMinutes = Math.floor(totalSeconds / 60);
       const totalHours = (totalSeconds / 3600).toFixed(1);
 
-      console.log(`${day} (${dateStr}): ${daySessions.length} sessions, ${totalMinutes} min`);
+      console.log(`${day} (${dateStr}): ${daySessions.length} sessions, ${totalMinutes} min, ${totalHours}h`);
 
       return {
         day,
-        hours: totalHours,
+        hours: parseFloat(totalHours),
         minutes: totalMinutes,
         sessionCount: daySessions.length,
         date: dateStr
       };
     });
 
-    console.log('Weekly data:', weekData);
+    console.log('Weekly data generated:', weekData);
     setWeeklyData(weekData);
   };
 
@@ -142,7 +224,11 @@ function Analytics() {
       date.setDate(today.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
       
-      const daySessions = sessions.filter(s => s.date === dateStr);
+      const daySessions = sessions.filter(s => {
+        // Handle both old format (with time) and new format (date only)
+        const sessionDate = s.date.split('T')[0];
+        return sessionDate === dateStr;
+      });
       const totalSeconds = daySessions.reduce((sum, s) => sum + s.duration, 0);
       const totalMinutes = Math.floor(totalSeconds / 60);
 
@@ -161,6 +247,7 @@ function Analytics() {
       });
     }
 
+    console.log('Monthly data generated:', daysInMonth);
     setMonthlyData(daysInMonth);
   };
 
@@ -263,16 +350,16 @@ function Analytics() {
                   <div className="grid-line"></div>
                 </div>
                 {weeklyData.map((data, index) => {
-                  // Calculate max minutes in the week for better scaling
-                  const maxWeekMinutes = Math.max(...weeklyData.map(d => d.minutes), 1);
-                  const minutes = data.minutes;
-                  // Use adaptive scaling based on actual max
-                  const scaleMax = maxWeekMinutes < 60 ? 60 : 240; // Scale to 1 hour or 4 hours
-                  const heightPercent = (minutes / scaleMax) * 100;
-                  // Ensure minimum 8% height for visibility
-                  const finalHeight = minutes > 0 ? Math.max(heightPercent, 8) : 0;
+                  // Calculate max hours in the week for better scaling
+                  const maxWeekHours = Math.max(...weeklyData.map(d => d.hours), 0.1);
+                  const hours = data.hours;
+                  // Dynamic scale: use 4 if max is high, otherwise use ceiling of max hours
+                  const scaleMax = maxWeekHours > 4 ? Math.ceil(maxWeekHours) : 4;
+                  const heightPercent = (hours / scaleMax) * 100;
+                  // Ensure minimum height for visibility when there's data
+                  const finalHeight = hours > 0 ? Math.max(heightPercent, 5) : 0;
                   
-                  console.log(`${data.day}: ${minutes} min, height: ${finalHeight}%`);
+                  console.log(`Bar ${data.day}: ${hours}h (${data.minutes}min), height: ${finalHeight}%, scale: ${scaleMax}`);
                   
                   return (
                     <div key={index} className="bar-item">
@@ -284,7 +371,7 @@ function Analytics() {
                           <div className="bar-tooltip">
                             <div className="tooltip-day">{data.day}</div>
                             <div className="tooltip-time">
-                              {data.minutes > 0 ? `${data.minutes} min` : 'No study time'}
+                              {data.hours > 0 ? `${data.hours}h (${data.minutes}m)` : 'No study time'}
                             </div>
                             {data.sessionCount > 0 && (
                               <div className="tooltip-sessions">{data.sessionCount} session{data.sessionCount > 1 ? 's' : ''}</div>

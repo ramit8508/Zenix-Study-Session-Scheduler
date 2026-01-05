@@ -156,18 +156,31 @@ function DashBoard() {
               </div>
             ) : (
               <div className="subject-breakdown-list">
-                {Object.entries(subjectBreakdown).map(([subject, duration]) => (
-                  <div key={subject} className="subject-item">
-                    <div className="subject-name">{subject}</div>
-                    <div className="subject-time">{formatTime(duration)}</div>
-                    <div className="subject-bar">
-                      <div 
-                        className="subject-bar-fill" 
-                        style={{ width: `${(duration / Math.max(...Object.values(subjectBreakdown))) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+                {Object.entries(subjectBreakdown)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([subject, duration]) => {
+                    const totalTime = Object.values(subjectBreakdown).reduce((sum, d) => sum + d, 0);
+                    const percentage = ((duration / totalTime) * 100).toFixed(1);
+                    const hours = (duration / 3600).toFixed(1);
+                    const sessions = JSON.parse(localStorage.getItem('sessions') || '[]')
+                      .filter(s => s.subject === subject).length;
+                    
+                    return (
+                      <div key={subject} className="subject-item-dashboard">
+                        <div className="subject-header-dashboard">
+                          <span className="subject-name-dashboard">{subject}</span>
+                          <span className="subject-time-dashboard">{hours}h ({percentage}%)</span>
+                        </div>
+                        <div className="subject-bar-container-dashboard">
+                          <div 
+                            className="subject-bar-fill-dashboard" 
+                            style={{ width: `${percentage}%` }}
+                          ></div>
+                        </div>
+                        <div className="subject-sessions-dashboard">{sessions} sessions</div>
+                      </div>
+                    );
+                  })}
               </div>
             )}
           </div>

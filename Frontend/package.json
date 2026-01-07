@@ -50,11 +50,7 @@
       "executableName": "zenix-study-tracker",
       "synopsis": "Fully offline study session tracking application",
       "maintainer": "Student OS Team",
-      "icon": "public/icon.png",
       "artifactName": "${productName}-${version}-${arch}.${ext}"
-    },
-    "appImage": {
-      "license": "MIT"
     },
     "protocols": [],
     "beforePack": "./scripts/before-pack.js"

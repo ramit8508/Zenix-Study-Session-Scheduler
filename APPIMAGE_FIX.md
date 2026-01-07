@@ -14,7 +14,7 @@
 - ✅ Optimized V8 cache with 'code' option
 - ✅ Disabled renderer backgrounding for better responsiveness
 - ✅ Added Vite build optimizations:
-  - Terser minification with console/debugger removal
+  - ESBuild minification for faster builds
   - Code splitting for react-vendor and icons
   - Disabled sourcemaps for smaller bundle size
 - ✅ Disabled spell checking to reduce memory usage
@@ -104,7 +104,7 @@ chmod +x Zenix-Study-Tracker-*.AppImage
    - No-sandbox execution by default
 
 2. **vite.config.js:**
-   - Terser minification with dead code elimination
+   - ESBuild minification for faster compilation
    - Manual code splitting for vendors
    - Disabled sourcemaps for production
 

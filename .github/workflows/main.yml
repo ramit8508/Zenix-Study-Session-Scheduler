@@ -22,9 +22,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: Frontend/package-lock.json
 
-      - name: Install Frontend dependencies
-        working-directory: Frontend
-        run: npm install
+      - name: Clean Frontend cache\r\n        working-directory: Frontend\r\n        run: |\r\n          rm -rf node_modules package-lock.json\r\n          npm install
 
       - name: Install Backend dependencies
         working-directory: Backend
@@ -81,3 +79,4 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

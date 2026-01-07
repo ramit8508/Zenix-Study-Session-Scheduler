@@ -4,12 +4,13 @@ const path = require('path');
 exports.default = async function(context) {
   console.log('📦 Preparing offline package for Linux...');
   
-  // Get the correct app directory path
-  const appDir = context.appDir || path.dirname(context.packager.appDir) || process.cwd();
-  
-  // Ensure backend dependencies are included
-  const backendPath = path.join(appDir, '../Backend');
+  // Use __dirname to get reliable path (scripts directory)
+  const frontendDir = path.resolve(__dirname, '..');
+  const backendPath = path.join(frontendDir, '../Backend');
   const backendNodeModules = path.join(backendPath, 'node_modules');
+  
+  console.log('Frontend dir:', frontendDir);
+  console.log('Backend path:', backendPath);
   
   if (fs.existsSync(backendNodeModules)) {
     console.log('✅ Backend node_modules found - will be bundled');

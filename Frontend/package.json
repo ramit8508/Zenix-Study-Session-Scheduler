@@ -41,13 +41,6 @@
         "deb"
       ],
       "category": "Education",
-      "icon": "public/icon.png",
-      "desktop": {
-        "Name": "Zenix Study Tracker",
-        "Comment": "Offline Study Session Tracker for Student OS",
-        "Categories": "Education;Utility;",
-        "Keywords": "study;tracker;offline;education;"
-      },
       "executableName": "zenix-study-tracker",
       "synopsis": "Fully offline study session tracking application",
       "maintainer": "Student OS Team"

@@ -26,19 +26,30 @@
       "dist/**/*",
       "electron/**/*",
       "package.json",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      "../Backend/node_modules/sqlite/**/*",
+      "../Backend/node_modules/sqlite3/**/*"
     ],
     "extraResources": [
       {
         "from": "../Backend",
         "to": "Backend",
         "filter": [
+          "**/*",
+          "!.git"
+        ]
+      },
+      {
+        "from": "../Backend/node_modules",
+        "to": "Backend/node_modules",
+        "filter": [
           "**/*"
         ]
       }
     ],
     "asarUnpack": [
-      "node_modules/sqlite3/**/*"
+      "node_modules/sqlite3/**/*",
+      "node_modules/sqlite/**/*"
     ],
     "linux": {
       "target": [
@@ -54,6 +65,13 @@
         {
           "from": "node_modules/sqlite3",
           "to": "node_modules/sqlite3",
+          "filter": [
+            "**/*"
+          ]
+        },
+        {
+          "from": "node_modules/sqlite",
+          "to": "node_modules/sqlite",
           "filter": [
             "**/*"
           ]

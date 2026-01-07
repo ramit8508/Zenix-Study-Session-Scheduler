@@ -83,7 +83,7 @@ form {
 .login-heading {
   margin-bottom: 10px;
   font-size: 24px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .login-para {
@@ -91,7 +91,7 @@ form {
   color: #888;
   font-size: 14px;
   text-align: center;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 .login-signup-button-box {
   display: flex;

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -7,6 +7,12 @@ let backendServer = null;
 let backendPath = '';
 
 const isDev = process.env.NODE_ENV === 'development';
+
+// Disable all network access except localhost (for backend communication)
+app.commandLine.appendSwitch('disable-http-cache');
+app.commandLine.appendSwitch('disable-background-networking');
+app.commandLine.appendSwitch('disable-component-update');
+app.commandLine.appendSwitch('disable-sync');
 
 // Import backend using dynamic import (ESM)
 let connectDB, startServer, closeDB, User, Session;
@@ -221,7 +227,10 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      webSecurity: true,
+      enableRemoteModule: false,
+      sandbox: false
     },
     icon: path.join(__dirname, '../public/icon.png'),
     title: 'Zenix Study Tracker',
@@ -255,6 +264,29 @@ function createWindow() {
 
 app.whenReady().then(async () => {
   try {
+    // Block all external network requests (allow only localhost)
+    await session.defaultSession.setProxy({ 
+      mode: 'direct'
+    });
+    
+    // Block external URLs except localhost
+    session.defaultSession.webRequest.onBeforeRequest({ 
+      urls: ['*://*/*'] 
+    }, (details, callback) => {
+      const url = new URL(details.url);
+      // Allow localhost and file protocol only
+      if (url.hostname === 'localhost' || 
+          url.hostname === '127.0.0.1' || 
+          url.protocol === 'file:' ||
+          url.protocol === 'devtools:' ||
+          url.protocol === 'chrome-extension:') {
+        callback({});
+      } else {
+        console.log('🚫 Blocked external request:', details.url);
+        callback({ cancel: true });
+      }
+    });
+
     // Initialize backend first
     await initializeBackend();
     

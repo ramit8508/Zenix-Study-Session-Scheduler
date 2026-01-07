@@ -7,14 +7,15 @@ dotenv.config({
 });
 
 const PORT = process.env.PORT || 5000;
+const HOST = '127.0.0.1'; // Bind only to localhost for security
 
 // Initialize SQLite database
 export const startServer = async () => {
   try {
     await connectDB();
     
-    const server = app.listen(PORT, () => {
-      console.log(`⚙️  Server is running at port : ${PORT}`);
+    const server = app.listen(PORT, HOST, () => {
+      console.log(`⚙️  Server is running at ${HOST}:${PORT} (localhost only - OFFLINE MODE)`);
     });
     
     return server;

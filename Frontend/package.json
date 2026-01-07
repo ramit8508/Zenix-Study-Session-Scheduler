@@ -17,6 +17,7 @@
   "build": {
     "appId": "com.zenix.studytracker",
     "productName": "Zenix Study Tracker",
+    "publish": null,
     "directories": {
       "output": "release"
     },
@@ -30,8 +31,7 @@
         "from": "../Backend",
         "to": "Backend",
         "filter": [
-          "**/*",
-          "!node_modules/**/*"
+          "**/*"
         ]
       }
     ],
@@ -41,11 +41,21 @@
         "deb"
       ],
       "category": "Education",
-      "icon": "public/icon.png"
-    }
+      "icon": "public/icon.png",
+      "desktop": {
+        "Name": "Zenix Study Tracker",
+        "Comment": "Offline Study Session Tracker for Student OS",
+        "Categories": "Education;Utility;",
+        "Keywords": "study;tracker;offline;education;"
+      },
+      "executableName": "zenix-study-tracker",
+      "synopsis": "Fully offline study session tracking application",
+      "maintainer": "Student OS Team"
+    },
+    "protocols": [],
+    "beforePack": "./scripts/before-pack.js"
   },
   "dependencies": {
-    "axios": "^1.13.2",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.3",

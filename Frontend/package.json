@@ -33,8 +33,7 @@
         "from": "../Backend",
         "to": "Backend",
         "filter": [
-          "**/*",
-          "!node_modules/**/*"
+          "**/*"
         ]
       }
     ],

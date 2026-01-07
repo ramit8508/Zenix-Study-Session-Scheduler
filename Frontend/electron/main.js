@@ -8,11 +8,16 @@ let backendPath = '';
 
 const isDev = process.env.NODE_ENV === 'development';
 
-// Disable all network access except localhost (for backend communication)
+// Performance and security optimizations
 app.commandLine.appendSwitch('disable-http-cache');
 app.commandLine.appendSwitch('disable-background-networking');
 app.commandLine.appendSwitch('disable-component-update');
 app.commandLine.appendSwitch('disable-sync');
+app.commandLine.appendSwitch('enable-hardware-acceleration');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-zero-copy');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('no-sandbox'); // For AppImage compatibility
 
 // Import backend using dynamic import (ESM)
 let connectDB, startServer, closeDB, User, Session;
@@ -224,17 +229,26 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    minWidth: 800,
+    minHeight: 600,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
       webSecurity: true,
       enableRemoteModule: false,
-      sandbox: false
+      sandbox: false,
+      enableWebSQL: false,
+      spellcheck: false,
+      v8CacheOptions: 'code',
+      backgroundThrottling: false
     },
+    backgroundColor: '#ffffff',
     icon: path.join(__dirname, '../public/icon.png'),
     title: 'Zenix Study Tracker',
-    show: false
+    show: false,
+    frame: true,
+    autoHideMenuBar: true
   });
 
   mainWindow.once('ready-to-show', () => {

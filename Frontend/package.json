@@ -38,13 +38,33 @@
     ],
     "linux": {
       "target": [
-        "AppImage",
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
         "deb"
       ],
       "category": "Education",
       "executableName": "zenix-study-tracker",
       "synopsis": "Fully offline study session tracking application",
-      "maintainer": "Student OS Team"
+      "maintainer": "Student OS Team",
+      "desktop": {
+        "Name": "Zenix Study Tracker",
+        "Comment": "Track your study sessions offline",
+        "Categories": "Education;Utility;",
+        "StartupWMClass": "Zenix Study Tracker"
+      },
+      "icon": "public/icon.png",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "appImage": {
+      "license": "MIT",
+      "desktop": {
+        "Exec": "AppRun --no-sandbox %U",
+        "StartupWMClass": "Zenix Study Tracker"
+      }
     },
     "protocols": [],
     "beforePack": "./scripts/before-pack.js"

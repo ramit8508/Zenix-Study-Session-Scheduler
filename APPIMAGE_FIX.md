@@ -25,8 +25,16 @@
 ### Building AppImage:
 
 ```bash
+# Step 1: Install Frontend dependencies (includes sqlite3)
 cd Frontend
 npm install
+
+# Step 2: Install Backend dependencies separately
+cd ../Backend
+npm install
+
+# Step 3: Build the AppImage
+cd ../Frontend
 npm run electron:build:linux
 ```
 
@@ -54,6 +62,20 @@ chmod +x Zenix-Study-Tracker-*.AppImage
 ```
 
 ## Common Issues and Solutions
+
+### Issue: "Cannot find package 'sqlite3'" Error
+**Solution:** This happens when sqlite3 native module isn't bundled correctly.
+1. Make sure you've installed dependencies in BOTH Frontend and Backend:
+   ```bash
+   cd Frontend && npm install
+   cd ../Backend && npm install
+   ```
+2. Rebuild the AppImage:
+   ```bash
+   cd Frontend
+   npm run electron:build:linux
+   ```
+3. The package.json has been updated to include sqlite3 and properly bundle native modules.
 
 ### Issue: "AppImage won't open when double-clicked"
 **Solution:** 

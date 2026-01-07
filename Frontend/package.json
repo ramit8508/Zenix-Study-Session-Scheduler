@@ -25,16 +25,21 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "package.json"
+      "package.json",
+      "node_modules/**/*"
     ],
     "extraResources": [
       {
         "from": "../Backend",
         "to": "Backend",
         "filter": [
-          "**/*"
+          "**/*",
+          "!node_modules/**/*"
         ]
       }
+    ],
+    "asarUnpack": [
+      "node_modules/sqlite3/**/*"
     ],
     "linux": {
       "target": [
@@ -46,7 +51,16 @@
         },
         "deb"
       ],
-      "category": "Education",
+      "extraFiles": [
+        {
+          "from": "node_modules/sqlite3",
+          "to": "node_modules/sqlite3",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ],
+      "category" : "Education",
       "executableName": "zenix-study-tracker",
       "synopsis": "Fully offline study session tracking application",
       "maintainer": "Student OS Team",
@@ -56,11 +70,19 @@
     "beforePack": "./scripts/before-pack.js"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.3",
     "react-icons": "^5.5.0",
-    "react-router-dom": "^7.11.0"
+    "react-router-dom": "^7.11.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

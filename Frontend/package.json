@@ -5,6 +5,7 @@
   "main": "electron/main.js",
   "author": "Your Name",
   "description": "Zenix Study Tracker - Desktop App",
+  "homepage": "https://github.com/ramit8508/Zenix-Study-Session-Scheduler",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

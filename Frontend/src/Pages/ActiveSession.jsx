@@ -135,12 +135,16 @@ function ActiveSession() {
       
       console.log('Sessions after save:', sessions);
       console.log('✅ Session saved to localStorage');
+      console.log('📦 localStorage.sessions now:', localStorage.getItem('sessions'));
       
       // Dispatch custom event to notify other components immediately
-      window.dispatchEvent(new CustomEvent('sessionsUpdated', { 
+      console.log('🔔 DISPATCHING sessionsUpdated event...');
+      const event = new CustomEvent('sessionsUpdated', { 
         detail: { sessions, newSession } 
-      }));
+      });
+      window.dispatchEvent(event);
       console.log('✅ Dispatched sessionsUpdated event to all components');
+      console.log('📊 Event detail:', { sessionCount: sessions.length, newSessionId: newSession.id });
 
       // Try to save to backend/database if available
       try {

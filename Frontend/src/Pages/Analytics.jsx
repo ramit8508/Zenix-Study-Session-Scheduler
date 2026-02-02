@@ -41,7 +41,9 @@ function Analytics() {
     
     // Custom event listener for same-window updates (Electron fix)
     const handleSessionsUpdated = (e) => {
-      console.log('📊 Analytics received sessionsUpdated event:', e.detail);
+      console.log('🎯 Analytics received sessionsUpdated event!');
+      console.log('📊 Event detail:', e.detail);
+      console.log('🔄 Reloading analytics data...');
       loadAnalyticsData();
     };
 
@@ -87,13 +89,18 @@ function Analytics() {
         : [];
       
       console.log('Analytics - Loaded sessions from localStorage:', storedSessions);
+      console.log('📊 Sessions for analytics:', storedSessions);
       
       if (storedSessions.length > 0) {
         // Use localStorage data
         setSessions(storedSessions);
+        console.log('🔢 Calculating stats...');
         calculateStats(storedSessions);
+        console.log('📈 Generating weekly data...');
         generateWeeklyData(storedSessions);
+        console.log('🗓️ Generating monthly data...');
         generateMonthlyData(storedSessions);
+        console.log('📚 Calculating subject breakdown...');
         calculateSubjectBreakdown(storedSessions);
       } else {
         // Try backend as fallback (only if Electron and has user)
@@ -362,19 +369,29 @@ function Analytics() {
         </div>
 
         {/* Weekly Chart */}
-        {view === 'weekly' && (
+        {view === 'weekly' && (() => {
+          // Calculate dynamic scale for the entire week
+          const maxWeekHours = Math.max(...weeklyData.map(d => d.hours), 0);
+          // Adaptive scale: if max is less than 1, use 1; if less than 3, use 3; otherwise round up
+          const scaleMax = maxWeekHours === 0 ? 2 : 
+                          maxWeekHours < 1 ? 1 : 
+                          maxWeekHours < 3 ? 3 : 
+                          Math.ceil(maxWeekHours);
+          
+          // Generate Y-axis labels based on scale
+          const yLabels = Array.from({length: 5}, (_, i) => scaleMax - (i * scaleMax / 4));
+          
+          return (
           <div className="chart-container">
             <h3 className="chart-title">
               <Clock size={20} />
-              Weekly Study Hours
+              Weekly Study Hours (Max: {scaleMax}h)
             </h3>
             <div className="chart-wrapper">
               <div className="y-axis">
-                <span>4</span>
-                <span>3</span>
-                <span>2</span>
-                <span>1</span>
-                <span>0</span>
+                {yLabels.map((label, i) => (
+                  <span key={i}>{label.toFixed(1)}</span>
+                ))}
               </div>
               <div className="bar-chart">
                 <div className="grid-lines">
@@ -385,14 +402,11 @@ function Analytics() {
                   <div className="grid-line"></div>
                 </div>
                 {weeklyData.map((data, index) => {
-                  // Calculate max hours in the week for better scaling
-                  const maxWeekHours = Math.max(...weeklyData.map(d => d.hours), 0.1);
                   const hours = data.hours;
-                  // Dynamic scale: use 4 if max is high, otherwise use ceiling of max hours
-                  const scaleMax = maxWeekHours > 4 ? Math.ceil(maxWeekHours) : 4;
-                  const heightPercent = (hours / scaleMax) * 100;
-                  // Ensure minimum height for visibility when there's data
-                  const finalHeight = hours > 0 ? Math.max(heightPercent, 5) : 0;
+                  // Calculate height as percentage of max scale
+                  const heightPercent = scaleMax > 0 ? (hours / scaleMax) * 100 : 0;
+                  // Minimum 8% height for visibility when there's data
+                  const finalHeight = hours > 0 ? Math.max(heightPercent, 8) : 0;
                   
                   console.log(`Bar ${data.day}: ${hours}h (${data.minutes}min), height: ${finalHeight}%, scale: ${scaleMax}`);
                   
@@ -421,7 +435,8 @@ function Analytics() {
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* Monthly Heatmap */}
         {view === 'monthly' && (

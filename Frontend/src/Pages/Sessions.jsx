@@ -4,6 +4,9 @@ import { Search, Trash2, Clock, Calendar } from 'lucide-react';
 import { sessionsAPI } from '../api/sessions';
 import '../Styles/Sessions.css';
 
+// Check if running in Electron
+const isElectron = window.electron !== undefined;
+
 function Sessions() {
   const [sessions, setSessions] = useState([]);
   const [filter, setFilter] = useState('All');
@@ -11,25 +14,78 @@ function Sessions() {
 
   useEffect(() => {
     loadSessions();
+    
+    // Also reload sessions when window gains focus (navigating back to this page)
+    const handleFocus = () => {
+      console.log('Window focused - reloading sessions');
+      loadSessions();
+    };
+    
+    // Storage event listener for cross-tab updates
+    const handleStorageChange = (e) => {
+      if (e.key === 'sessions') {
+        console.log('Sessions updated in localStorage - reloading');
+        loadSessions();
+      }
+    };
+    
+    // Custom event listener for same-window updates (Electron fix)
+    const handleSessionsUpdated = (e) => {
+      console.log('📢 sessionsUpdated event received:', e.detail);
+      loadSessions();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('sessionsUpdated', handleSessionsUpdated);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('sessionsUpdated', handleSessionsUpdated);
+    };
   }, []);
 
   const loadSessions = async () => {
+    console.log('=== LOADING SESSIONS ===');
+    console.log('📦 localStorage.sessions:', localStorage.getItem('sessions'));
     try {
-      const user = JSON.parse(localStorage.getItem('user'));
-      const response = await sessionsAPI.getAll(user?.id || 1);
+      // Try to get user from localStorage (device user)
+      const userStr = localStorage.getItem('user') || localStorage.getItem('deviceUser');
+      let user = null;
       
-      if (response.success) {
-        setSessions(response.data.reverse());
-      } else {
-        // Fallback to localStorage
-        const storedSessions = JSON.parse(localStorage.getItem('sessions') || '[]');
-        setSessions(storedSessions.reverse());
+      if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+        try {
+          user = JSON.parse(userStr);
+        } catch (e) {
+          console.error('Error parsing user:', e);
+        }
       }
+      
+      console.log('User found:', user);
+      
+      // ALWAYS load from localStorage first for device-based auth
+      console.log('Loading from localStorage...');
+      const sessionsStr = localStorage.getItem('sessions');
+      console.log('📦 Raw sessions string:', sessionsStr);
+      
+      const storedSessions = (sessionsStr && sessionsStr !== 'undefined' && sessionsStr !== 'null') 
+        ? JSON.parse(sessionsStr) 
+        : [];
+      
+      console.log('✅ Loaded from localStorage:', storedSessions.length, 'sessions');
+      console.log('📊 Sessions data:', storedSessions);
+      
+      // Sort by most recent first (by id which is timestamp)
+      const sortedSessions = storedSessions.sort((a, b) => (b.id || 0) - (a.id || 0));
+      console.log('🔄 Sorted sessions:', sortedSessions);
+      setSessions(sortedSessions);
     } catch (error) {
-      console.error('Error loading sessions:', error);
-      const storedSessions = JSON.parse(localStorage.getItem('sessions') || '[]');
-      setSessions(storedSessions.reverse());
+      console.error('❌ Error loading sessions:', error);
+      // Final fallback to empty array
+      setSessions([]);
     }
+    console.log('=== SESSIONS LOAD COMPLETE ===');
   };
 
   const formatTime = (seconds) => {
@@ -75,29 +131,54 @@ function Sessions() {
 
   const filteredSessions = sessions.filter(session => {
     const matchesFilter = filter === 'All' || session.type === filter;
-    const matchesSearch = session.subject.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = session.subject ? session.subject.toLowerCase().includes(searchQuery.toLowerCase()) : true;
     return matchesFilter && matchesSearch;
   });
+
+  console.log('📊 Sessions state:', sessions);
+  console.log('📊 Filtered sessions:', filteredSessions.length, 'Total sessions:', sessions.length);
+  console.log('📊 Filter:', filter, 'Search:', searchQuery);
 
   const groupedSessions = groupSessionsByDate(filteredSessions);
 
   const deleteSession = async (id) => {
+    console.log('=== DELETING SESSION ===', id);
     try {
-      const user = JSON.parse(localStorage.getItem('user'));
-      await sessionsAPI.delete(id, user?.id || 1);
+      const userStr = localStorage.getItem('user') || localStorage.getItem('deviceUser');
+      let user = null;
       
-      // Update local state
-      const updatedSessions = sessions.filter(s => s.id !== id);
-      setSessions(updatedSessions);
+      if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+        try {
+          user = JSON.parse(userStr);
+        } catch (e) {
+          console.error('Error parsing user:', e);
+        }
+      }
+      
+      if (isElectron && user?.id) {
+        // Try IPC delete
+        await sessionsAPI.delete(id, user.id);
+      }
+      
+      // Get current sessions from localStorage
+      const sessionsStr = localStorage.getItem('sessions');
+      const currentSessions = (sessionsStr && sessionsStr !== 'undefined' && sessionsStr !== 'null') 
+        ? JSON.parse(sessionsStr) 
+        : [];
+      
+      const updatedSessions = currentSessions.filter(s => s.id !== id);
       
       // Update localStorage
       localStorage.setItem('sessions', JSON.stringify(updatedSessions));
+      
+      // Update state (already sorted)
+      setSessions(sessions.filter(s => s.id !== id));
+      
+      console.log('✅ Session deleted');
     } catch (error) {
-      console.error('Error deleting session:', error);
-      // Fallback - just update localStorage
-      const updatedSessions = sessions.filter(s => s.id !== id);
-      setSessions(updatedSessions);
-      localStorage.setItem('sessions', JSON.stringify(updatedSessions));
+      console.error('❌ Error deleting session:', error);
+      // Fallback - just update state
+      setSessions(sessions.filter(s => s.id !== id));
     }
   };
 

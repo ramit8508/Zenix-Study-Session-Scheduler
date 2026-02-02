@@ -9,10 +9,15 @@ function NavBar() {
   const location = useLocation();
 
   useEffect(() => {
-    // Get user data from localStorage
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
+    // Get user data from localStorage (check both user and deviceUser)
+    const userStr = localStorage.getItem('user') || localStorage.getItem('deviceUser');
+    if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+      try {
+        setUser(JSON.parse(userStr));
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        setUser(null);
+      }
     }
   }, []);
 

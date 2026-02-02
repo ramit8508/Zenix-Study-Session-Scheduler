@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Bell, Database, Download, Upload, Trash2, LogOut, Edit, Save, X } from 'lucide-react';
+import { User, Bell, Database, Download, Upload, Trash2, Edit, Save, X } from 'lucide-react';
+// COMMENTED OUT - LogOut removed for device-based auth
+// import { LogOut } from 'lucide-react';
 import NavBar from '../Components/NavBar';
 import { userAPI } from '../api/user';
 import '../Styles/Settings.css';
@@ -13,24 +15,30 @@ function Settings() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    email: ''
+    // COMMENTED OUT - Password editing removed for device-based auth
+    // password: '',
+    // confirmPassword: ''
   });
   const [editError, setEditError] = useState('');
 
   useEffect(() => {
     // Load user data
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
+    const userData = localStorage.getItem('user') || localStorage.getItem('deviceUser');
+    if (userData && userData !== 'undefined' && userData !== 'null') {
+      try {
+        const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      setEditForm({
-        name: parsedUser.name || '',
-        email: parsedUser.email || '',
-        password: '',
-        confirmPassword: ''
-      });
+        setEditForm({
+          name: parsedUser.name || '',
+          email: parsedUser.email || ''
+          // COMMENTED OUT - Password fields removed for device-based auth
+          // password: '',
+          // confirmPassword: ''
+        });
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
     }
 
     // Load preferences
@@ -56,15 +64,15 @@ function Settings() {
       return;
     }
 
-    if (editForm.password && editForm.password !== editForm.confirmPassword) {
-      setEditError('Passwords do not match');
-      return;
-    }
-
-    if (editForm.password && editForm.password.length < 6) {
-      setEditError('Password must be at least 6 characters');
-      return;
-    }
+    // COMMENTED OUT - Password validation removed for device-based auth
+    // if (editForm.password && editForm.password !== editForm.confirmPassword) {
+    //   setEditError('Passwords do not match');
+    //   return;
+    // }
+    // if (editForm.password && editForm.password.length < 6) {
+    //   setEditError('Password must be at least 6 characters');
+    //   return;
+    // }
 
     try {
       const updateData = {
@@ -72,20 +80,30 @@ function Settings() {
         email: editForm.email,
       };
 
-      if (editForm.password) {
-        updateData.password = editForm.password;
-      }
+      // COMMENTED OUT - Password update removed for device-based auth
+      // if (editForm.password) {
+      //   updateData.password = editForm.password;
+      // }
 
-      const response = await userAPI.update(user.id, updateData);
+      console.log('Updating profile with:', updateData);
+      const response = await userAPI.update(user?.id || 'device-user', updateData);
+      
+      console.log('Update response:', response);
       
       if (response.success) {
+        // Update local state with new data
         setUser(response.data);
         setIsEditingProfile(false);
+        
+        // Reset edit form to new values
         setEditForm({
-          ...editForm,
-          password: '',
-          confirmPassword: ''
+          name: response.data.name,
+          email: response.data.email
+          // COMMENTED OUT - Password fields removed for device-based auth
+          // password: '',
+          // confirmPassword: ''
         });
+        
         alert('Profile updated successfully!');
       } else {
         setEditError(response.message || 'Failed to update profile');
@@ -100,9 +118,10 @@ function Settings() {
     setIsEditingProfile(false);
     setEditForm({
       name: user?.name || '',
-      email: user?.email || '',
-      password: '',
-      confirmPassword: ''
+      email: user?.email || ''
+      // COMMENTED OUT - Password fields removed for device-based auth
+      // password: '',
+      // confirmPassword: ''
     });
     setEditError('');
   };
@@ -186,12 +205,13 @@ function Settings() {
     }
   };
 
-  const handleSignOut = () => {
-    if (window.confirm('Are you sure you want to sign out?')) {
-      localStorage.clear();
-      navigate('/');
-    }
-  };
+  // COMMENTED OUT - Sign out removed for device-based auth
+  // const handleSignOut = () => {
+  //   if (window.confirm('Are you sure you want to sign out?')) {
+  //     localStorage.clear();
+  //     navigate('/');
+  //   }
+  // };
 
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -273,7 +293,8 @@ function Settings() {
                 />
               </div>
 
-              <div className="form-group">
+              {/* COMMENTED OUT - Password editing removed for device-based auth */}
+              {/* <div className="form-group">
                 <label>New Password (optional)</label>
                 <input
                   type="password"
@@ -293,7 +314,7 @@ function Settings() {
                   onChange={handleEditChange}
                   placeholder="Confirm new password"
                 />
-              </div>
+              </div> */}
 
               <div className="edit-actions">
                 <button className="action-btn primary" onClick={handleSaveProfile}>
@@ -373,13 +394,13 @@ function Settings() {
           </button>
         </div>
 
-        {/* Sign Out Section */}
-        <div className="settings-section">
+        {/* COMMENTED OUT - Sign Out removed for device-based auth */}
+        {/* <div className="settings-section">
           <button className="action-btn signout" onClick={handleSignOut}>
             <LogOut size={18} />
             Sign Out
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

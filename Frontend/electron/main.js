@@ -58,87 +58,106 @@ async function initializeBackend() {
 
 // IPC Handlers for direct backend communication
 function setupIPCHandlers() {
-  // Auth handlers
-  ipcMain.handle('auth:register', async (event, userData) => {
+  // ============================================================
+  // COMMENTED OUT - Login/Signup Auth (Using Device-Based Auth)
+  // ============================================================
+  
+  // ipcMain.handle('auth:register', async (event, userData) => {
+  //   try {
+  //     const { name, email, password } = userData;
+  //     if (!name || !email || !password) {
+  //       return { success: false, message: 'All fields are required' };
+  //     }
+  //     const existingUser = await User.findOne({ email });
+  //     if (existingUser) {
+  //       return { success: false, message: 'User with email already exists' };
+  //     }
+  //     const user = await User.create({ name, email, password });
+  //     const token = user.generateAccessToken();
+  //     const userWithoutPassword = await User.findByIdWithoutPassword(user.id);
+  //     return {
+  //       success: true,
+  //       data: { user: userWithoutPassword, accessToken: token },
+  //       message: 'User registered successfully'
+  //     };
+  //   } catch (error) {
+  //     console.error('Register error:', error);
+  //     return { success: false, message: error.message };
+  //   }
+  // });
+
+  // ipcMain.handle('auth:login', async (event, credentials) => {
+  //   try {
+  //     const { email, password } = credentials;
+  //     if (!email || !password) {
+  //       return { success: false, message: 'Email and password are required' };
+  //     }
+  //     const user = await User.findOne({ email });
+  //     if (!user) {
+  //       return { success: false, message: 'User does not exist' };
+  //     }
+  //     const isValid = await user.isPasswordCorrect(password);
+  //     if (!isValid) {
+  //       return { success: false, message: 'Invalid credentials' };
+  //     }
+  //     const token = user.generateAccessToken();
+  //     const userWithoutPassword = await User.findByIdWithoutPassword(user.id);
+  //     return {
+  //       success: true,
+  //       data: { user: userWithoutPassword, accessToken: token },
+  //       message: 'User logged in successfully'
+  //     };
+  //   } catch (error) {
+  //     console.error('Login error:', error);
+  //     return { success: false, message: error.message };
+  //   }
+  // });
+
+  // ipcMain.handle('auth:logout', async () => {
+  //   return { success: true, message: 'User logged out successfully' };
+  // });
+
+  // ipcMain.handle('auth:getCurrentUser', async (event, token) => {
+  //   try {
+  //     const jwt = require('jsonwebtoken');
+  //     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-this');
+  //     const user = await User.findByIdWithoutPassword(decoded.id);
+  //     if (!user) {
+  //       return { success: false, message: 'User not found' };
+  //     }
+  //     return { success: true, data: user, message: 'User fetched successfully' };
+  //   } catch (error) {
+  //     return { success: false, message: 'Invalid token' };
+  //   }
+  // });
+
+  // ============================================================
+  // NEW: Device-Based Authentication Handlers
+  // ============================================================
+  
+  // Get or create device user (auto-login)
+  ipcMain.handle('auth:getDeviceUser', async () => {
     try {
-      const { name, email, password } = userData;
-
-      // Validation
-      if (!name || !email || !password) {
-        return { success: false, message: 'All fields are required' };
-      }
-
-      // Check if user exists
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return { success: false, message: 'User with email already exists' };
-      }
-
-      // Create user
-      const user = await User.create({ name, email, password });
-      const token = user.generateAccessToken();
-      const userWithoutPassword = await User.findByIdWithoutPassword(user.id);
-
+      const deviceId = require('os').hostname() + '-' + require('os').userInfo().username;
+      const deviceUser = {
+        id: `device-${Buffer.from(deviceId).toString('base64').substring(0, 16)}`,
+        name: 'Local User',
+        email: 'user@local.device',
+        deviceId: deviceId,
+        createdAt: new Date().toISOString()
+      };
+      
       return {
         success: true,
-        data: { user: userWithoutPassword, accessToken: token },
-        message: 'User registered successfully'
+        data: { 
+          user: deviceUser, 
+          accessToken: `device-token-${Date.now()}` 
+        },
+        message: 'Device user authenticated successfully'
       };
     } catch (error) {
-      console.error('Register error:', error);
+      console.error('Device auth error:', error);
       return { success: false, message: error.message };
-    }
-  });
-
-  ipcMain.handle('auth:login', async (event, credentials) => {
-    try {
-      const { email, password } = credentials;
-
-      if (!email || !password) {
-        return { success: false, message: 'Email and password are required' };
-      }
-
-      const user = await User.findOne({ email });
-      if (!user) {
-        return { success: false, message: 'User does not exist' };
-      }
-
-      const isValid = await user.isPasswordCorrect(password);
-      if (!isValid) {
-        return { success: false, message: 'Invalid credentials' };
-      }
-
-      const token = user.generateAccessToken();
-      const userWithoutPassword = await User.findByIdWithoutPassword(user.id);
-
-      return {
-        success: true,
-        data: { user: userWithoutPassword, accessToken: token },
-        message: 'User logged in successfully'
-      };
-    } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, message: error.message };
-    }
-  });
-
-  ipcMain.handle('auth:logout', async () => {
-    return { success: true, message: 'User logged out successfully' };
-  });
-
-  ipcMain.handle('auth:getCurrentUser', async (event, token) => {
-    try {
-      const jwt = require('jsonwebtoken');
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-this');
-      const user = await User.findByIdWithoutPassword(decoded.id);
-
-      if (!user) {
-        return { success: false, message: 'User not found' };
-      }
-
-      return { success: true, data: user, message: 'User fetched successfully' };
-    } catch (error) {
-      return { success: false, message: 'Invalid token' };
     }
   });
 

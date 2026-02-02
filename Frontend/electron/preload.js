@@ -5,12 +5,16 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electron', {
   platform: process.platform,
   
-  // Auth API - communicates directly with backend via IPC
+  // Auth API - Device-based authentication (auto-login)
   auth: {
-    register: (userData) => ipcRenderer.invoke('auth:register', userData),
-    login: (credentials) => ipcRenderer.invoke('auth:login', credentials),
-    logout: () => ipcRenderer.invoke('auth:logout'),
-    getCurrentUser: (token) => ipcRenderer.invoke('auth:getCurrentUser', token),
+    // NEW: Device-based auth
+    getDeviceUser: () => ipcRenderer.invoke('auth:getDeviceUser'),
+    
+    // COMMENTED OUT - Traditional login/signup (kept for reference)
+    // register: (userData) => ipcRenderer.invoke('auth:register', userData),
+    // login: (credentials) => ipcRenderer.invoke('auth:login', credentials),
+    // logout: () => ipcRenderer.invoke('auth:logout'),
+    // getCurrentUser: (token) => ipcRenderer.invoke('auth:getCurrentUser', token),
   },
 
   // Sessions API - for study session tracking

@@ -4,6 +4,9 @@ import NavBar from '../Components/NavBar';
 import { sessionsAPI } from '../api/sessions';
 import '../Styles/Analytics.css';
 
+// Check if running in Electron
+const isElectron = window.electron !== undefined;
+
 function Analytics() {
   const [sessions, setSessions] = useState([]);
   const [view, setView] = useState('weekly'); // 'weekly' or 'monthly'
@@ -24,13 +27,32 @@ function Analytics() {
 
     // Reload data when window gains focus (for Electron)
     const handleFocus = () => {
+      console.log('Analytics window focused - reloading data');
+      loadAnalyticsData();
+    };
+    
+    // Listen for localStorage changes (when sessions are added)
+    const handleStorageChange = (e) => {
+      if (e.key === 'sessions' || e.key === 'todayStudyTime') {
+        console.log('Storage changed - reloading analytics');
+        loadAnalyticsData();
+      }
+    };
+    
+    // Custom event listener for same-window updates (Electron fix)
+    const handleSessionsUpdated = (e) => {
+      console.log('📊 Analytics received sessionsUpdated event:', e.detail);
       loadAnalyticsData();
     };
 
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('sessionsUpdated', handleSessionsUpdated);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('sessionsUpdated', handleSessionsUpdated);
     };
   }, []);
 
@@ -58,10 +80,12 @@ function Analytics() {
 
   const loadAnalyticsData = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem('user'));
+      // Use localStorage as primary source for device-based auth
+      const sessionsStr = localStorage.getItem('sessions');
+      const storedSessions = (sessionsStr && sessionsStr !== 'undefined' && sessionsStr !== 'null') 
+        ? JSON.parse(sessionsStr) 
+        : [];
       
-      // Always load localStorage sessions as primary source
-      const storedSessions = JSON.parse(localStorage.getItem('sessions') || '[]');
       console.log('Analytics - Loaded sessions from localStorage:', storedSessions);
       
       if (storedSessions.length > 0) {
@@ -72,54 +96,65 @@ function Analytics() {
         generateMonthlyData(storedSessions);
         calculateSubjectBreakdown(storedSessions);
       } else {
-        // Try to get from backend if localStorage is empty
-        const response = await sessionsAPI.getAnalytics(user?.id || 1);
+        // Try backend as fallback (only if Electron and has user)
+        const userStr = localStorage.getItem('user') || localStorage.getItem('deviceUser');
+        const user = (userStr && userStr !== 'undefined' && userStr !== 'null') 
+          ? JSON.parse(userStr) 
+          : null;
         
-        if (response.success && response.data.totalSessions > 0) {
-          const analytics = response.data;
-          
-          // Set stats
-          setStats({
-            totalTime: Math.floor(analytics.totalTime / 60), // Convert to minutes
-            avgSession: Math.floor(analytics.avgSession / 60),
-            totalSessions: analytics.totalSessions,
-            longestStreak: calculateStreakFromData(analytics.weeklyData)
-          });
+        if (isElectron && user?.id) {
+          try {
+            const response = await sessionsAPI.getAnalytics(user.id);
+            
+            if (response.success && response.data.totalSessions > 0) {
+              const analytics = response.data;
+              
+              setStats({
+                totalTime: Math.floor(analytics.totalTime / 60),
+                avgSession: Math.floor(analytics.avgSession / 60),
+                totalSessions: analytics.totalSessions,
+                longestStreak: calculateStreakFromData(analytics.weeklyData)
+              });
 
-          // Load sessions for detailed view
-          const sessionsResponse = await sessionsAPI.getAll(user?.id || 1);
-          if (sessionsResponse.success) {
-            setSessions(sessionsResponse.data);
-            calculateStats(sessionsResponse.data);
-            generateWeeklyData(sessionsResponse.data);
-            generateMonthlyData(sessionsResponse.data);
+              const sessionsResponse = await sessionsAPI.getAll(user.id);
+              if (sessionsResponse.success) {
+                setSessions(sessionsResponse.data);
+                calculateStats(sessionsResponse.data);
+                generateWeeklyData(sessionsResponse.data);
+                generateMonthlyData(sessionsResponse.data);
+              }
+
+              setSubjectBreakdown(analytics.subjectBreakdown || []);
+              return;
+            }
+          } catch (backendError) {
+            console.log('Backend fetch failed, using empty state:', backendError);
           }
-
-          // Set subject breakdown
-          setSubjectBreakdown(analytics.subjectBreakdown || []);
-        } else {
-          // No data in either place
-          setStats({
-            totalTime: 0,
-            avgSession: 0,
-            totalSessions: 0,
-            longestStreak: 0
-          });
-          setWeeklyData([]);
-          setMonthlyData([]);
-          setSubjectBreakdown([]);
         }
+        
+        // No data available - set empty state
+        setStats({
+          totalTime: 0,
+          avgSession: 0,
+          totalSessions: 0,
+          longestStreak: 0
+        });
+        setWeeklyData([]);
+        setMonthlyData([]);
+        setSubjectBreakdown([]);
       }
     } catch (error) {
       console.error('Error loading analytics:', error);
-      // Fallback to localStorage
+      // Final fallback to localStorage
       const storedSessions = JSON.parse(localStorage.getItem('sessions') || '[]');
-      console.log('Analytics - Fallback to localStorage:', storedSessions);
+      console.log('Analytics - Error fallback to localStorage:', storedSessions);
       setSessions(storedSessions);
-      calculateStats(storedSessions);
-      generateWeeklyData(storedSessions);
-      generateMonthlyData(storedSessions);
-      calculateSubjectBreakdown(storedSessions);
+      if (storedSessions.length > 0) {
+        calculateStats(storedSessions);
+        generateWeeklyData(storedSessions);
+        generateMonthlyData(storedSessions);
+        calculateSubjectBreakdown(storedSessions);
+      }
     }
   };
 

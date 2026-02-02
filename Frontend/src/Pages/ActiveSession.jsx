@@ -94,44 +94,78 @@ function ActiveSession() {
   };
 
   const handleEndSession = async () => {
-    const activeSession = JSON.parse(localStorage.getItem('activeSession'));
-    const user = JSON.parse(localStorage.getItem('user'));
+    const activeSessionStr = localStorage.getItem('activeSession');
+    const activeSession = (activeSessionStr && activeSessionStr !== 'undefined' && activeSessionStr !== 'null') 
+      ? JSON.parse(activeSessionStr) 
+      : null;
     
-    // Prepare session data
+    const userStr = localStorage.getItem('user') || localStorage.getItem('deviceUser');
+    const user = (userStr && userStr !== 'undefined' && userStr !== 'null') 
+      ? JSON.parse(userStr) 
+      : null;
+    
+    console.log('=== ENDING SESSION ===');
+    console.log('Active session data:', activeSession);
+    console.log('User data:', user);
+    console.log('Elapsed time:', elapsedTime);
+    
+    // Prepare session data with unique ID
+    const sessionId = Date.now();
     const newSession = {
-      user_id: user?.id || 1,
+      id: sessionId,
+      user_id: user?.id || 'device-user',
       subject: activeSession.subject,
       type: activeSession.sessionType,
       duration: elapsedTime,
       date: new Date().toISOString().split('T')[0],
       notes: '',
+      goalDuration: activeSession.duration ? parseInt(activeSession.duration) * 60 : null,
+      created_at: new Date().toISOString(),
     };
 
+    console.log('New session to save:', newSession);
+
     try {
-      // Save session to backend/database
-      await sessionsAPI.create(newSession);
-      
-      // Also save to localStorage as fallback
+      // Save to localStorage first (primary storage for device auth)
       const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
-      sessions.push({
-        ...newSession,
-        id: Date.now(),
-        goalDuration: activeSession.duration ? parseInt(activeSession.duration) * 60 : null,
-      });
+      console.log('Existing sessions before save:', sessions);
+      
+      sessions.push(newSession);
       localStorage.setItem('sessions', JSON.stringify(sessions));
+      
+      console.log('Sessions after save:', sessions);
+      console.log('✅ Session saved to localStorage');
+      
+      // Dispatch custom event to notify other components immediately
+      window.dispatchEvent(new CustomEvent('sessionsUpdated', { 
+        detail: { sessions, newSession } 
+      }));
+      console.log('✅ Dispatched sessionsUpdated event to all components');
+
+      // Try to save to backend/database if available
+      try {
+        await sessionsAPI.create(newSession);
+        console.log('✅ Session saved to backend');
+      } catch (dbError) {
+        console.log('⚠️ Database save failed, using localStorage only:', dbError);
+      }
 
       // Update today's study time
       const today = new Date().toDateString();
       const todayTime = JSON.parse(localStorage.getItem('todayStudyTime') || '{}');
       todayTime[today] = (todayTime[today] || 0) + elapsedTime;
       localStorage.setItem('todayStudyTime', JSON.stringify(todayTime));
+      
+      console.log('✅ Today study time updated:', todayTime);
 
       // Clear active session
       localStorage.removeItem('activeSession');
+      console.log('✅ Active session cleared');
+      console.log('=== SESSION END COMPLETE ===');
 
       navigate('/dashboard');
     } catch (error) {
-      console.error('Error saving session:', error);
+      console.error('❌ Error saving session:', error);
       // Still navigate away even if save fails
       localStorage.removeItem('activeSession');
       navigate('/dashboard');

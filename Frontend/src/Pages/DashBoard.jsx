@@ -28,15 +28,27 @@ function DashBoard() {
     }
 
     // Get user data from localStorage
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
+    const userData = localStorage.getItem('user') || localStorage.getItem('deviceUser');
+    if (userData && userData !== 'undefined' && userData !== 'null') {
+      try {
+        setUser(JSON.parse(userData));
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
     }
 
-    // Calculate stats
-    const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+    // Calculate stats - safe parsing
+    const sessionsStr = localStorage.getItem('sessions');
+    const sessions = (sessionsStr && sessionsStr !== 'undefined' && sessionsStr !== 'null') 
+      ? JSON.parse(sessionsStr) 
+      : [];
+    
     const today = new Date().toDateString();
-    const todayTime = JSON.parse(localStorage.getItem('todayStudyTime') || '{}');
+    
+    const todayTimeStr = localStorage.getItem('todayStudyTime');
+    const todayTime = (todayTimeStr && todayTimeStr !== 'undefined' && todayTimeStr !== 'null') 
+      ? JSON.parse(todayTimeStr) 
+      : {};
     
     // Today's study time
     setTodayStudyTime(todayTime[today] || 0);
@@ -73,8 +85,13 @@ function DashBoard() {
   // Refresh stats when component gains focus (app reopens)
   useEffect(() => {
     const handleFocus = () => {
+      console.log('Dashboard focused - refreshing stats');
       // Recalculate stats when app comes back into focus
-      const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+      const sessionsStr = localStorage.getItem('sessions');
+      const sessions = (sessionsStr && sessionsStr !== 'undefined' && sessionsStr !== 'null') 
+        ? JSON.parse(sessionsStr) 
+        : [];
+      
       const today = new Date().toDateString();
       const todayTime = JSON.parse(localStorage.getItem('todayStudyTime') || '{}');
       
@@ -91,9 +108,20 @@ function DashBoard() {
       });
       setSubjectBreakdown(breakdown);
     };
-
+    
+    // Custom event listener for same-window updates (Electron fix)
+    const handleSessionsUpdated = (e) => {
+      console.log('🏠 Dashboard received sessionsUpdated event:', e.detail);
+      handleFocus(); // Reuse the refresh logic
+    };
+    
     window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    window.addEventListener('sessionsUpdated', handleSessionsUpdated);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('sessionsUpdated', handleSessionsUpdated);
+    };
   }, []);
 
   const formatTime = (seconds) => {
